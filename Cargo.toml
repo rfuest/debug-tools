@@ -1,0 +1,9 @@
+[package]
+name = "{{project-name}}"
+version = "0.1.0"
+authors = ["{{authors}}"]
+edition = "2018"
+
+[dependencies]
+embedded-graphics = "0.7.0-alpha.2"
+embedded-graphics-simulator = { git = "https://github.com/embedded-graphics/embedded-graphics" }
