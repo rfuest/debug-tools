@@ -7,3 +7,6 @@ edition = "2018"
 [dependencies]
 embedded-graphics = "0.7.0-alpha.2"
 embedded-graphics-simulator = { git = "https://github.com/embedded-graphics/simulator.git" }
+
+[patch.crates-io]
+embedded-graphics = { git = "https://github.com/embedded-graphics/embedded-graphics.git" }
