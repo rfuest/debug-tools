@@ -1,5 +1,3 @@
-use std::convert::TryFrom;
-
 use embedded_graphics::{
     fonts::{Font6x8, Text},
     prelude::*,
@@ -13,45 +11,33 @@ use sdl2::{
 
 use crate::Parameter;
 
-pub struct Parameters {
+pub struct Menu {
     selected: usize,
     active: bool,
     mouse_button_down: bool,
-    parameters: Vec<(String, Parameter)>,
 }
 
-impl Parameters {
-    pub(crate) fn new(parameters: Vec<(String, Parameter)>) -> Self {
+impl Menu {
+    pub(crate) fn new() -> Self {
         Self {
             selected: 0,
             active: false,
             mouse_button_down: false,
-            parameters,
         }
     }
 
-    pub fn get<T: TryFrom<Parameter>>(&self, name: &str) -> T {
-        T::try_from(*self.get_by_name(name))
-            .unwrap_or_else(|_| panic!("wrong parameter type: {}", name))
-    }
-
-    fn get_by_name(&self, name: &str) -> &Parameter {
-        &self
-            .parameters
-            .iter()
-            .find(|(n, _)| n == name)
-            .unwrap_or_else(|| panic!("couldn't find parameter: {}", name))
-            .1
-    }
-
-    pub(crate) fn draw_menu<T>(&self, target: &mut T, color: T::Color) -> Result<(), T::Error>
+    pub(crate) fn draw_menu<T>(
+        &self,
+        parameters: &[Parameter],
+        target: &mut T,
+        color: T::Color,
+    ) -> Result<(), T::Error>
     where
         T: DrawTarget,
     {
-        let max_name_width = self
-            .parameters
+        let max_name_width = parameters
             .iter()
-            .map(|(name, _)| name.len())
+            .map(|parameter| parameter.name.len())
             .max()
             .unwrap_or(0);
 
@@ -65,22 +51,22 @@ impl Parameters {
 
         let mut position = Point::new(2, 2);
 
-        for (index, (name, value)) in self.parameters.iter().enumerate() {
+        for (index, parameter) in parameters.iter().enumerate() {
             if index == self.selected {
                 Text::new(">", position).into_styled(style).draw(target)?;
             }
 
             if index == self.selected && self.active {
-                Text::new(name, position + name_delta)
+                Text::new(&parameter.name, position + name_delta)
                     .into_styled(style_inverted)
                     .draw(target)?;
             } else {
-                Text::new(name, position + name_delta)
+                Text::new(&parameter.name, position + name_delta)
                     .into_styled(style)
                     .draw(target)?;
             }
 
-            Text::new(&value.to_string(), position + value_delta)
+            Text::new(&parameter.value.to_string(), position + value_delta)
                 .into_styled(style)
                 .draw(target)?;
 
@@ -90,7 +76,11 @@ impl Parameters {
         Ok(())
     }
 
-    pub(crate) fn handle_events(&mut self, window: &mut Window) -> bool {
+    pub(crate) fn handle_events(
+        &mut self,
+        parameters: &mut [Parameter],
+        window: &mut Window,
+    ) -> bool {
         for event in window.events() {
             let event = match event {
                 SimulatorEvent::Quit => return true,
@@ -144,17 +134,17 @@ impl Parameters {
                     if self.selected > 0 {
                         self.selected -= 1;
                     } else {
-                        self.selected = self.parameters.len() - 1;
+                        self.selected = parameters.len() - 1;
                     }
                 }
                 Event::Down if !self.active => {
                     self.selected += 1;
-                    if self.selected >= self.parameters.len() {
+                    if self.selected >= parameters.len() {
                         self.selected = 0;
                     }
                 }
                 Event::Activate => self.active ^= true,
-                _ => self.parameters[self.selected].1.handle_event(event),
+                _ => parameters[self.selected].value.handle_event(event),
             }
         }
 
