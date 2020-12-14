@@ -4,10 +4,7 @@ use embedded_graphics::{
     style::{MonoTextStyle, MonoTextStyleBuilder},
 };
 use embedded_graphics_simulator::{SimulatorEvent, Window};
-use sdl2::{
-    keyboard::Keycode,
-    mouse::{MouseButton, MouseWheelDirection},
-};
+use sdl2::{keyboard::Keycode, mouse::MouseButton};
 
 use crate::Parameter;
 
@@ -109,22 +106,6 @@ impl Menu {
                 SimulatorEvent::MouseButtonUp { .. } => {
                     self.mouse_button_down = false;
                     continue;
-                }
-                SimulatorEvent::MouseWheel {
-                    mut scroll_delta,
-                    direction,
-                } => {
-                    if direction == MouseWheelDirection::Flipped {
-                        scroll_delta = scroll_delta.component_mul(Point::new(-1, -1));
-                    }
-
-                    if scroll_delta == Point::new(0, 1) {
-                        Event::Up
-                    } else if scroll_delta == Point::new(0, -1) {
-                        Event::Down
-                    } else {
-                        continue;
-                    }
                 }
                 _ => continue,
             };
